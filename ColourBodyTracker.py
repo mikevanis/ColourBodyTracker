@@ -8,7 +8,7 @@ from ShapeDetector import ShapeDetector
 sd = ShapeDetector()
 
 if __name__ == '__main__':
-    cam = CameraController()
+    cam = CameraController(width=600, height=400)
     cam.start()
 
     try:
