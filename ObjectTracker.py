@@ -6,14 +6,19 @@ from imutils import contours as contour_util
 class ObjectTracker:
 
     # Constructor
-    def __init__(self, max_distance=20):
+    def __init__(self, max_distance=60, last_seen_max=20):
         self.max_distance = max_distance
         self.previous = list()
-        self.current = list()
+        self.labels = ["chest", "head", "l_wrist", "l_ankle", "r_wrist", "r_ankle"]
+        self.last_seen_max = last_seen_max
         pass
 
-    def track(self, objects):
+    def track(self, contours):
         all_matches = list()
+        objects = list()
+
+        for c in contours:
+            objects.append(TrackedObject(c, "unknown"))
 
         # Iterate through both
         for (i, n_object) in enumerate(objects):
@@ -32,18 +37,42 @@ class ObjectTracker:
 
         results = list()
 
-        # Loop through first six matches with shortest distances
-        for match in all_matches[:6]:
-            # Change labels
-            objects[match.i].label = self.previous[match.j].label
-            results.append(objects[match.i])
+        matched_objects = [False] * objects.__len__()
+        matched_previous = [False] * self.previous.__len__()
+
+        # Match objects
+        for match in all_matches:
+            i = match.i
+            j = match.j
+
+            if matched_objects[i] is False and matched_previous[j] is False:
+                matched_objects[i] = True
+                matched_previous[j] = True
+                objects[match.i].label = self.previous[match.j].label
+                objects[match.i].last_seen = 0
+
+        # Look for missing labels
+        for label in self.labels:
+            found_object = next((o for o in objects if o.label == label), None)
+            if found_object is None:
+                # Object not found. Get object from previous and insert to objects list.
+                old_object = next((o for o in self.previous if o.label == label), None)
+                if old_object is not None:
+                    if old_object.last_seen < self.last_seen_max:
+                        old_object.last_seen = old_object.last_seen + 1
+                        objects.append(old_object)
 
         # Return found TrackedObjects
-        return results
+        self.previous = objects
+        return objects
 
     # Setup tracking of individual object.
     def track_object(self, contour, label):
         self.previous.append(TrackedObject(contour, label))
+
+    # Setup tracking with list of objects.
+    def insert_tracked_objects(self, o_list):
+        self.previous = o_list
 
     # Sort contours
     def label_contours(self, contours):
@@ -116,10 +145,10 @@ class ObjectTracker:
 
 class MatchedPair:
 
-    def __init__(self, i, j, dist):
+    def __init__(self, i, j, distance):
         self.i = i
         self.j = j
-        self.dist = dist
+        self.distance = distance
 
 
 class TrackedObject:

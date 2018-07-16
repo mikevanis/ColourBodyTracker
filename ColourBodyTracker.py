@@ -7,20 +7,17 @@ import time
 sys.path.insert(0, 'CameraController')
 from CameraController import CameraController
 from VideoController import VideoController
-from ShapeDetector import ShapeDetector
 from MarkerFinder import MarkerFinder
 from ObjectTracker import ObjectTracker
-from ObjectTracker import TrackedObject
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--test_video")
 args = parser.parse_args()
 
-sd = ShapeDetector()
-marker_finder = MarkerFinder(show_mask=True, min_radius=4)
+marker_finder = MarkerFinder(show_mask=False, min_radius=4)
 object_tracker = ObjectTracker()
 
-found_limbs = None
+found_limbs = False
 
 if __name__ == '__main__':
     if args.test_video is None:
@@ -66,12 +63,15 @@ if __name__ == '__main__':
 
                 if current_frame is not None:
                     contours = marker_finder.find_contours(current_frame)
-                    if found_limbs is not None:
-                        for limb in found_limbs:
+                    if found_limbs is True:
+                        tracked_objects = object_tracker.track(contours)
+                        for limb in tracked_objects:
                             cv2.putText(current_frame, limb.label, limb.get_center(), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
                     else:
                         found_limbs = object_tracker.label_contours(contours)
+                        object_tracker.insert_tracked_objects(found_limbs)
+                        found_limbs = True
 
                     cv2.imshow("Result", current_frame)
                 key = cv2.waitKey(1)
