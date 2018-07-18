@@ -17,6 +17,7 @@ class ObjectTracker:
         all_matches = list()
         objects = list()
 
+        # Convert contours to TrackedObject list
         for c in contours:
             objects.append(TrackedObject(c, "unknown"))
 
@@ -35,16 +36,14 @@ class ObjectTracker:
         # Sort all matches - closest first
         all_matches.sort(key=lambda x: x.distance)
 
-        results = list()
-
+        # Match objects
         matched_objects = [False] * objects.__len__()
         matched_previous = [False] * self.previous.__len__()
-
-        # Match objects
         for match in all_matches:
             i = match.i
             j = match.j
 
+            # If both objects are not matched, then match them.
             if matched_objects[i] is False and matched_previous[j] is False:
                 matched_objects[i] = True
                 matched_previous[j] = True
@@ -59,8 +58,19 @@ class ObjectTracker:
                 old_object = next((o for o in self.previous if o.label == label), None)
                 if old_object is not None:
                     if old_object.last_seen < self.last_seen_max:
+                        # Old object is still alive.
                         old_object.last_seen = old_object.last_seen + 1
                         objects.append(old_object)
+                    """
+                    else:
+                        # Old object is dead. Replace with new unmatched.
+                        for index, o in enumerate(objects):
+                            if o.label == "unknown":
+                                objects[index] = old_object
+                                break
+                    """
+
+
 
         # Return found TrackedObjects
         self.previous = objects
@@ -125,13 +135,29 @@ class ObjectTracker:
                     elif match.i == 3 or match.i == 4:
                         # Right ankle
                         results.append(TrackedObject(top_to_bottom_contours[match.i], "r_ankle"))
-
             return results
+
+    @staticmethod
+    def convert_list_to_dictionary(list_of_objects):
+        dictionary = {}
+        for item in list_of_objects:
+            dictionary[item.label] = item.get_center()
+        return dictionary
 
     # Calculate distance between two points
     @staticmethod
     def calculate_distance(a_x, a_y, b_x, b_y):
         return math.sqrt((b_x - a_x) ** 2 + (b_y - a_y) ** 2)
+
+    # Calculate angle between two points
+    def calculate_angle(self, a_x, a_y, b_x, b_y):
+        angle = math.atan2(b_y - a_y, b_x - a_x)
+        angle = math.degrees(angle)
+        return self.map_int(angle, -180, 180, 0, 360)
+
+    @staticmethod
+    def map_int(x, in_min, in_max, out_min, out_max):
+        return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
 
     @staticmethod
     def get_largest_contour(contours):
