@@ -18,10 +18,10 @@ class MarkerFinder:
         frame_to_thresh = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
         #lower_red = (170, 150, 50)
         #upper_red = (180, 255, 255)
-        lower_red = (170, 130, 50)
+        lower_red = (170, 140, 50)
         upper_red = (180, 255, 255)
         mask1 = cv2.inRange(frame_to_thresh, lower_red, upper_red)
-        lower_red = (0, 130, 50)
+        lower_red = (0, 140, 50)
         upper_red = (10, 255, 255)
         mask2 = cv2.inRange(frame_to_thresh, lower_red, upper_red)
         thresh = mask1 + mask2

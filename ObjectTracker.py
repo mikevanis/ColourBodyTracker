@@ -6,7 +6,7 @@ from imutils import contours as contour_util
 class ObjectTracker:
 
     # Constructor
-    def __init__(self, max_distance=60, last_seen_max=20):
+    def __init__(self, max_distance=60, last_seen_max=30):
         self.max_distance = max_distance
         self.previous = list()
         self.labels = ["chest", "head", "l_wrist", "l_ankle", "r_wrist", "r_ankle"]
@@ -70,6 +70,55 @@ class ObjectTracker:
                                 break
                     """
 
+        # Find missing legs and hands
+        known_labels = list()
+        unknown_contours = list()
+        for i, o in enumerate(objects):
+            if o.label == "unknown":
+                unknown_contours.append(o.contour)
+                del objects[i]
+            else:
+                known_labels.append(o.label)
+
+        if unknown_contours.__len__() > 0:
+            print("Contours missing.")
+            print(unknown_contours.__len__())
+            # One limb missing. Easy.
+            if unknown_contours.__len__() == 1:
+                for l in self.labels:
+                    if l not in known_labels:
+                        objects.append(TrackedObject(unknown_contours[0], l))
+
+            """
+            elif unknown_contours.__len__() == 2:
+                # If hands missing:
+                if "l_wrist" not in known_labels and "r_wrist" not in known_labels:
+                    unknown_contours = contour_util.sort_contours(unknown_contours, method="left-to-right")
+                    objects.append(TrackedObject(unknown_contours[0], "l_wrist"))
+                    objects.append(TrackedObject(unknown_contours[1], "r_wrist"))
+                elif "l_ankle" not in known_labels and "r_ankle" not in known_labels:
+                    unknown_contours = contour_util.sort_contours(unknown_contours, method="left-to-right")
+                    objects.append(TrackedObject(unknown_contours[0], "l_ankle"))
+                    objects.append(TrackedObject(unknown_contours[1], "r_ankle"))
+                elif "l_wrist" not in known_labels and "l_ankle" not in known_labels:
+                    unknown_contours = contour_util.sort_contours(unknown_contours, method="top-to-bottom")
+                    objects.append(TrackedObject(unknown_contours[0], "l_wrist"))
+                    objects.append(TrackedObject(unknown_contours[1], "l_ankle"))
+                elif "l_wrist" not in known_labels and "r_ankle" not in known_labels:
+                    unknown_contours = contour_util.sort_contours(unknown_contours, method="top-to-bottom")
+                    objects.append(TrackedObject(unknown_contours[0], "l_wrist"))
+                    objects.append(TrackedObject(unknown_contours[1], "r_ankle"))
+                elif "r_wrist" not in known_labels and "l_ankle" not in known_labels:
+                    unknown_contours = contour_util.sort_contours(unknown_contours, method="top-to-bottom")
+                    objects.append(TrackedObject(unknown_contours[0], "r_wrist"))
+                    objects.append(TrackedObject(unknown_contours[1], "l_ankle"))
+                elif "r_wrist" not in known_labels and "r_ankle" not in known_labels:
+                    unknown_contours = contour_util.sort_contours(unknown_contours, method="top-to-bottom")
+                    objects.append(TrackedObject(unknown_contours[0], "r_wrist"))
+                    objects.append(TrackedObject(unknown_contours[1], "r_ankle"))
+            else:
+                return None
+            """
 
 
         # Return found TrackedObjects

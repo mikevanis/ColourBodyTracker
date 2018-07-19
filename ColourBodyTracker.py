@@ -21,6 +21,7 @@ object_tracker = ObjectTracker()
 ik_controller = None
 
 has_found_limbs = False
+num_of_reads = 0
 
 if __name__ == '__main__':
     client = udp_client.SimpleUDPClient("localhost", 8000)
@@ -40,8 +41,12 @@ if __name__ == '__main__':
                     if has_found_limbs is True:
                         tracked_objects = object_tracker.track(contours)
                         point_dictionary = {}
-
-                        organised_limbs = object_tracker.convert_list_to_dictionary(tracked_objects)
+                        missing_points = 0
+                        if tracked_objects is not None:
+                            organised_limbs = object_tracker.convert_list_to_dictionary(tracked_objects)
+                        else:
+                            num_of_reads = 0
+                            has_found_limbs = False
 
                         try:
                             head_angle = object_tracker.calculate_angle(organised_limbs["head"], organised_limbs["chest"])
@@ -51,6 +56,7 @@ if __name__ == '__main__':
                             client.send_message("/head2", head_2_mapped)
                         except KeyError as e:
                             print(e)
+                            missing_points = missing_points + 1
 
                         try:
                             l_wrist_angle = object_tracker.calculate_angle(organised_limbs["l_wrist"], organised_limbs["chest"])
@@ -58,6 +64,7 @@ if __name__ == '__main__':
                             client.send_message("/l_wrist", l_wrist_mapped)
                         except KeyError as e:
                             print(e)
+                            missing_points = missing_points + 1
 
                         try:
                             l_ankle_angle = object_tracker.calculate_angle(organised_limbs["l_ankle"], organised_limbs["chest"])
@@ -65,6 +72,7 @@ if __name__ == '__main__':
                             client.send_message("/l_ankle", l_ankle_mapped)
                         except KeyError as e:
                             print(e)
+                            missing_points = missing_points + 1
 
                         try:
                             r_wrist_angle = object_tracker.calculate_angle(organised_limbs["r_wrist"], organised_limbs["chest"])
@@ -75,6 +83,7 @@ if __name__ == '__main__':
                             client.send_message("/r_wrist", r_wrist_mapped)
                         except KeyError as e:
                             print(e)
+                            missing_points = missing_points + 1
 
 
                         try:
@@ -87,6 +96,12 @@ if __name__ == '__main__':
                             client.send_message("/r_ankle", r_ankle_mapped)
                         except KeyError as e:
                             print(e)
+                            missing_points = missing_points + 1
+
+                        if missing_points > 4:
+                            num_of_reads = 0
+                            has_found_limbs = False
+                            print("Lost most limbs. Restarting...")
 
                         for limb in tracked_objects:
                             cv2.putText(current_frame, limb.label, limb.get_center(), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
@@ -107,8 +122,20 @@ if __name__ == '__main__':
                             head = next((o for o in found_limbs if o.label == "head"), None)
                             head_x, head_y = head.get_center()
                             #ik_controller.set_head_to_chest(object_tracker.calculate_distance(chest_x, chest_y, head_x, head_y))
-                            has_found_limbs = True
+                            #has_found_limbs = True
+
+                            num_of_reads = num_of_reads + 1
+                            if num_of_reads > 10:
+                                has_found_limbs = True
+                                print("Found number of required limbs. Starting tracking...")
+
                             print("Found limbs")
+                        else:
+                            num_of_reads = num_of_reads - 1
+                            if num_of_reads < 0:
+                                num_of_reads = 0
+
+
                     cv2.imshow("Result", current_frame)
                 key = cv2.waitKey(1)
 
