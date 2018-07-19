@@ -149,16 +149,6 @@ class ObjectTracker:
     def calculate_distance(a_x, a_y, b_x, b_y):
         return math.sqrt((b_x - a_x) ** 2 + (b_y - a_y) ** 2)
 
-    # Calculate angle between two points
-    def calculate_angle(self, a_x, a_y, b_x, b_y):
-        angle = math.atan2(b_y - a_y, b_x - a_x)
-        angle = math.degrees(angle)
-        return self.map_int(angle, -180, 180, 0, 360)
-
-    @staticmethod
-    def map_int(x, in_min, in_max, out_min, out_max):
-        return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
-
     @staticmethod
     def get_largest_contour(contours):
         if not contours:
@@ -167,6 +157,25 @@ class ObjectTracker:
             areas = [cv2.contourArea(c) for c in contours]
             max_index = np.argmax(areas)
             return contours[max_index], max_index
+
+    # Calculate angle between two points
+    def calculate_angle(self, a, b):
+        a_x, a_y = a
+        b_x, b_y = b
+        angle = math.atan2(b_y - a_y, b_x - a_x)
+        angle = math.degrees(angle)
+        return angle
+
+    # Map int range
+    @staticmethod
+    def map_int(x, in_min, in_max, out_min, out_max):
+        output = (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
+        if output > out_max:
+            output = out_max
+        if output < out_min:
+            output = out_min
+
+        return output
 
 
 class MatchedPair:

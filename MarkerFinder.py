@@ -16,9 +16,16 @@ class MarkerFinder:
         # Blur, convert to HSV, threshold, erode, dilate.
         blurred = cv2.GaussianBlur(image, (11, 11), 0)
         frame_to_thresh = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
-        lower_red = (170, 110, 50)
+        #lower_red = (170, 150, 50)
+        #upper_red = (180, 255, 255)
+        lower_red = (170, 130, 50)
         upper_red = (180, 255, 255)
-        thresh = cv2.inRange(frame_to_thresh, lower_red, upper_red)
+        mask1 = cv2.inRange(frame_to_thresh, lower_red, upper_red)
+        lower_red = (0, 130, 50)
+        upper_red = (10, 255, 255)
+        mask2 = cv2.inRange(frame_to_thresh, lower_red, upper_red)
+        thresh = mask1 + mask2
+
         thresh = cv2.erode(thresh, None, iterations=2)
         thresh = cv2.dilate(thresh, None, iterations=2)
 

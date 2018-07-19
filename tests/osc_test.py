@@ -18,7 +18,18 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     client = udp_client.SimpleUDPClient(args.ip, args.port)
-
-    for x in range(10):
-        client.send_message("/filter", random.random())
-        time.sleep(1)
+    while True:
+        client.send_message("/head", 1/100*-1)
+        for x in range(100):
+            client.send_message("/head", (1-x/100)*-1)
+            print(1-x/100)
+            time.sleep(0.05)
+        for x in range(100):
+            client.send_message("/head", x/100)
+            time.sleep(0.05)
+        for x in range(100):
+            client.send_message("/head", 1-x/100)
+            time.sleep(0.05)
+        for x in range(100):
+            client.send_message("/head", (x/100)*-1)
+            time.sleep(0.05)

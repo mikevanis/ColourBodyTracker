@@ -17,7 +17,6 @@ class IKController:
         self.left_leg_chain = None
         self.right_leg_chain = None
         self.head_to_chest_distance = 200
-        self.setup_model()
 
     # Compute inverse kinematics from points
     def compute(self, point_dictionary):
@@ -39,136 +38,22 @@ class IKController:
         l_ankle_x, l_ankle_z = transformed_points["l_ankle"]
         r_ankle_x, r_ankle_z = transformed_points["r_ankle"]
 
-
-        """
-        head_matrix = geometry_utils.to_transformation_matrix(np.array([head_x, 0, head_z]))
-        l_wrist_matrix = geometry_utils.to_transformation_matrix(np.array([l_wrist_x, 0, l_wrist_z]))
-        r_wrist_matrix = geometry_utils.to_transformation_matrix(np.array([r_wrist_x, 0, r_wrist_z]))
-        l_ankle_matrix = geometry_utils.to_transformation_matrix(np.array([l_ankle_x, 0, l_ankle_z]))
-        r_ankle_matrix = geometry_utils.to_transformation_matrix(np.array([r_ankle_x, 0, r_ankle_z]))
-
-        print("L arm")
-        print(self.left_arm_chain.inverse_kinematics(l_wrist_matrix))
-        print(l_wrist_matrix)
-
-        print("R arm")
-        print(self.right_arm_chain.inverse_kinematics(r_wrist_matrix))
-
-        print("Head")
-        print(self.head_chain.inverse_kinematics(head_matrix))
-
-        print("L ankle")
-        print(self.left_leg_chain.inverse_kinematics(l_ankle_matrix))
-
-        print("R ankle")
-        print(self.right_leg_chain.inverse_kinematics(r_ankle_matrix))
-        """
-        angle = math.atan(l_wrist_x / l_wrist_z)
-        print(math.degrees(angle))
+        l_wrist_angle = self.calculate_angle(l_wrist_x, l_wrist_z, chest_x, chest_y)
+        print(l_wrist_angle)
 
     # Set up head to chest image distance
     def set_head_to_chest(self, distance):
         self.head_to_chest_distance = distance
 
-    # Set up IK chains
-    def setup_model(self):
-        self.left_arm_chain = Chain(name='left_arm', links=[
-            OriginLink(),
-            URDFLink(
-              name="shoulder",
-              translation_vector=[-0.59, 0, 0.44],
-              orientation=[0, 0, 0],
-              rotation=[0, 0, 0],
-            ),
-            URDFLink(
-              name="elbow",
-              translation_vector=[0, 0, -0.53],
-              orientation=[0, 0, 0],
-              rotation=[0, 0, 0],
-            ),
-            URDFLink(
-                name="wrist",
-                translation_vector=[0, 0, -0.74],
-                orientation=[0, 0, 0],
-                rotation=[0, 0, 0],
-            )],active_links_mask=[False, True, True, True])
+    # Calculate angle between two points
+    def calculate_angle(self, a_x, a_y, b_x, b_y):
+        angle = math.atan2(b_y - a_y, b_x - a_x)
+        angle = math.degrees(angle)
+        return angle
 
-        self.right_arm_chain = Chain(name='right_arm', links=[
-            OriginLink(),
-            URDFLink(
-                name="shoulder",
-                translation_vector=[0.59, 0, 0.44],
-                orientation=[0, 0, 0],
-                rotation=[0, 0, 0],
-            ),
-            URDFLink(
-                name="elbow",
-                translation_vector=[0, 0, -0.53],
-                orientation=[0, 0, 0],
-                rotation=[0, 0, 0],
-            ),
-            URDFLink(
-                name="wrist",
-                translation_vector=[0, 0, -0.74],
-                orientation=[0, 0, 0],
-                rotation=[0, 0, 0],
-            )],active_links_mask=[False, True, True, True])
-
-        self.head_chain = Chain(name='head', links=[
-            OriginLink(),
-            URDFLink(
-                name="neck",
-                translation_vector=[0, 0, 1],
-                orientation=[0, 0, 0],
-                rotation=[0, 0, 0],
-            ),
-            URDFLink(
-                name="face",
-                translation_vector=[0, -0.2, 0],
-                orientation=[0, 0, 0],
-                rotation=[0, 0, 0],
-            )], active_links_mask=[False, True, True])
-
-        self.left_leg_chain = Chain(name='left_leg', links=[
-            OriginLink(),
-            URDFLink(
-                name="hip",
-                translation_vector=[0.26, 0, -1.07],
-                orientation=[0, 0, 0],
-                rotation=[0, 0, 0],
-            ),
-            URDFLink(
-                name="knee",
-                translation_vector=[0, 0, -0.98],
-                orientation=[0, 0, 0],
-                rotation=[0, 0, 0],
-            ),
-            URDFLink(
-                name="ankle",
-                translation_vector=[0, 0, -1.13],
-                orientation=[0, 0, 0],
-                rotation=[0, 0, 0],
-            )],active_links_mask=[False, True, True, True])
-
-        self.right_leg_chain = Chain(name='right_leg', links=[
-            OriginLink(),
-            URDFLink(
-                name="hip",
-                translation_vector=[-0.26, 0, -1.07],
-                orientation=[0, 0, 0],
-                rotation=[0, 0, 0],
-            ),
-            URDFLink(
-                name="knee",
-                translation_vector=[0, 0, -0.98],
-                orientation=[0, 0, 0],
-                rotation=[0, 0, 0],
-            ),
-            URDFLink(
-                name="ankle",
-                translation_vector=[0, 0, -1.13],
-                orientation=[0, 0, 0],
-                rotation=[0, 0, 0],
-            )],active_links_mask=[False, True, True, True])
+    # Map int range
+    @staticmethod
+    def map_int(x, in_min, in_max, out_min, out_max):
+        return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
 
 
