@@ -1,11 +1,13 @@
 import cv2
 import imutils
+import os
+os.chdir("/home/irs/ColourBodyTracker")
 import sys
 import argparse
 from imutils.video import FileVideoStream
 import time
 sys.path.insert(0, 'CameraController')
-from CameraController import CameraController
+import CameraController
 from VideoController import VideoController
 from MarkerFinder import MarkerFinder
 from ObjectTracker import ObjectTracker
@@ -27,7 +29,7 @@ if __name__ == '__main__':
     client = udp_client.SimpleUDPClient("localhost", 8000)
 
     if args.test_video is None:
-        cam = CameraController(width=600, height=400)
+        cam = CameraController.CameraController(width=600, height=400)
         cam.start()
 
         try:
